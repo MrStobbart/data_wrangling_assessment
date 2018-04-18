@@ -27,14 +27,11 @@ def create_and_evaluate_classifier_10_fold(features):
     for train_index, test_index in k_fold_validator.split(features):
         # print str(counter * 10) + '% cross-validation'
 
-        # Split features in training and test set
         training_features = [features[i] for i in train_index]
         test_features = [features[i] for i in test_index]
 
-        # Create classifier
         classifier = NaiveBayesClassifier.train(training_features)
 
-        # Evaluate classifier
         accuracy = util.accuracy(classifier, test_features)
 
         accuracies.append(accuracy)
@@ -59,27 +56,6 @@ def create_unigram_features(records):
     return features
 
 
-def create_uni_and_bigram_features(records):
-    """
-    Creates unigram and bigram features from list of records for classification
-    :param records: List of records
-    :return: List of features
-    """
-    features = []
-    for record in records:
-        tokens = create_tokens(record[1])
-        no_stopword_tokens = remove_stopwords(tokens)
-
-        unigram_features = {token: True for token in no_stopword_tokens}
-
-        bigrams = nltk.ngrams(no_stopword_tokens, 2)
-        bigram_features = {bigram: True for bigram in bigrams}
-
-        features.append([merge_two_dicts(unigram_features, bigram_features), int(record[0])])
-
-    return features
-
-
 def create_bigram_features(records):
     """
     Creates bigram features from list of records to be used for classification
@@ -90,11 +66,31 @@ def create_bigram_features(records):
     features = []
     for record in records:
         tokens = create_tokens(record[1])
-        no_stopword_tokens = remove_stopwords(tokens)
 
-        bigrams = nltk.ngrams(no_stopword_tokens, 2)
+        bigrams = nltk.ngrams(tokens, 2)
         bigram_features = {bigram: True for bigram in bigrams}
         features.append([bigram_features, int(record[0])])
+
+    return features
+
+
+def create_uni_and_bigram_features(records):
+    """
+    Creates unigram and bigram features from list of records for classification
+    :param records: List of records
+    :return: List of features
+    """
+    features = []
+    for record in records:
+        tokens = create_tokens(record[1])
+
+        no_stopword_tokens = remove_stopwords(tokens)
+        unigram_features = {token: True for token in no_stopword_tokens}
+
+        bigrams = nltk.ngrams(tokens, 2)
+        bigram_features = {bigram: True for bigram in bigrams}
+
+        features.append([merge_two_dicts(unigram_features, bigram_features), int(record[0])])
 
     return features
 
@@ -108,15 +104,15 @@ def create_pos_tag_features(records):
     features = []
     for record in records:
         tokens = create_tokens(record[1])
-        post_tags = create_pos_tags(tokens)
+        no_stopword_tokens = remove_stopwords(tokens)
+        post_tags = create_pos_tags(no_stopword_tokens)
 
-        unigram_features = {token: True for token in post_tags}
-        features.append([unigram_features, int(record[0])])
+        pos_tag_features = {token: True for token in post_tags}
+        features.append([pos_tag_features, int(record[0])])
 
     return features
 
 
-# Creates tokens, including case conversion
 def create_tokens(text):
     """
     Creates tokens from a given text
@@ -126,7 +122,17 @@ def create_tokens(text):
     return word_tokenize(text.lower())
 
 
-# Remove english stopword tokens
+def lemmatize_tokens(tokens):
+    """
+    Lemmatized the given list of tokens and returns a list of lemmatized tokens
+    :param tokens: List of tokens
+    :return: List of lemmatized tokens
+    """
+    lemmatizer = nltk.WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    return lemmatized_tokens
+
+
 def remove_stopwords(tokens):
     """
     Removes stopwords from list of tokens
@@ -138,7 +144,6 @@ def remove_stopwords(tokens):
     return tokens
 
 
-# Filter duplicates in data set
 def filter_duplicates(records):
     """
     Filters duplicates records
@@ -218,21 +223,20 @@ def run_tests():
     filtered_records = filter_duplicates(training_data)
     count_pos_and_neg_entries(filtered_records)
 
-    unigram_features = create_unigram_features(filtered_records)
-    uni_and_bigram_features = create_uni_and_bigram_features(filtered_records)
-    bigram_features = create_bigram_features(filtered_records)
-    pos_tag_features = create_pos_tag_features(filtered_records)
-
     print 'Train and evaluate unigram features:'
+    unigram_features = create_unigram_features(filtered_records)
     create_and_evaluate_classifier_10_fold(unigram_features)
 
-    print 'Train and evaluate on unigram and bigram features:'
+    print 'Train and evaluate on bigram features'
+    bigram_features = create_bigram_features(filtered_records)
     create_and_evaluate_classifier_10_fold(bigram_features)
 
-    print 'Train and evaluate on bigram features'
+    print 'Train and evaluate on unigram and bigram features:'
+    uni_and_bigram_features = create_uni_and_bigram_features(filtered_records)
     create_and_evaluate_classifier_10_fold(uni_and_bigram_features)
 
     print 'Train and evaluate on pos tag features'
+    pos_tag_features = create_pos_tag_features(filtered_records)
     create_and_evaluate_classifier_10_fold(pos_tag_features)
 
 

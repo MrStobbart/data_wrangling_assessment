@@ -150,7 +150,7 @@ def create_pos_tags(tokens):
     return nltk.pos_tag(tokens)
 
 
-def __main__():
+def run_tests():
     filtered_records = filter_duplicates(training_data)
     count_pos_and_neg_entries(filtered_records)
 
@@ -172,4 +172,9 @@ def __main__():
     create_and_evaluate_classifier_10_fold(pos_tag_features)
 
 
-__main__()
+def main():
+    run_tests()
+
+
+if __name__ == '__main__':
+    main()

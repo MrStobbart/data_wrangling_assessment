@@ -6,22 +6,19 @@ from nltk.classify import NaiveBayesClassifier, util
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.model_selection import KFold
-from sklearn.svm import SVC
 
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-# Open the training.txt file
-data_file = open('training.txt')
-
-# Read the training.txt file as a csv with tab as the delimiter.
-# The list method converts the tuple returned by the csv.reader to a lost
-training_data = list(csv.reader(data_file, delimiter='\t'))
-
 
 def create_and_evaluate_classifier_10_fold(features):
+    """
+    Uses 10 fold cross validation to create a classifier with naive bayes
+    for the given features. Evaluates the created classifier afterwards.
+    Results are printed to the console
+    :param features: List of features
+    """
 
     k_fold_validator = KFold(n_splits=10, shuffle=False)
     accuracies = []
@@ -47,7 +44,11 @@ def create_and_evaluate_classifier_10_fold(features):
 
 
 def create_unigram_features(records):
-
+    """
+    Creates unigram features from list of records for classification
+    :param records: List of records
+    :return: List of features
+    """
     features = []
     for record in records:
         tokens = create_tokens(record[1])
@@ -59,7 +60,11 @@ def create_unigram_features(records):
 
 
 def create_uni_and_bigram_features(records):
-
+    """
+    Creates unigram and bigram features from list of records for classification
+    :param records: List of records
+    :return: List of features
+    """
     features = []
     for record in records:
         tokens = create_tokens(record[1])
@@ -76,6 +81,11 @@ def create_uni_and_bigram_features(records):
 
 
 def create_bigram_features(records):
+    """
+    Creates bigram features from list of records to be used for classification
+    :param records: List of records
+    :return: List of features
+    """
 
     features = []
     for record in records:
@@ -90,7 +100,11 @@ def create_bigram_features(records):
 
 
 def create_pos_tag_features(records):
-
+    """
+    Create part of speech tag features from records using nltk to be used for classification
+    :param records: List of records
+    :return: List of pos tag features
+    """
     features = []
     for record in records:
         tokens = create_tokens(record[1])
@@ -104,11 +118,21 @@ def create_pos_tag_features(records):
 
 # Creates tokens, including case conversion
 def create_tokens(text):
+    """
+    Creates tokens from a given text
+    :param text: Text to tokenize
+    :return: List of tokens
+    """
     return word_tokenize(text.lower())
 
 
 # Remove english stopword tokens
 def remove_stopwords(tokens):
+    """
+    Removes stopwords from list of tokens
+    :param tokens: List of tokens to remove stopwords from
+    :return: List of tokens without stopwords
+    """
     stopword_set = set(stopwords.words('english'))
     tokens = [token for token in tokens if token not in stopword_set]
     return tokens
@@ -116,17 +140,32 @@ def remove_stopwords(tokens):
 
 # Filter duplicates in data set
 def filter_duplicates(records):
+    """
+    Filters duplicates records
+    :param records: List of records to be filtered
+    :return: Filtered records
+    """
     tuples = (tuple(record) for record in records)
     return [list(record) for record in set(tuples)]
 
 
 def merge_two_dicts(dict1, dict2):
+    """
+    Merges two dictionaries into one
+    :param dict1: First dictionary to merge
+    :param dict2: Second dictionary to merge
+    :return: Merged dictionary
+    """
     merged_dict = dict1.copy()
     merged_dict.update(dict2)
     return merged_dict
 
 
 def print_features(features):
+    """
+    Helper function that prints the given features to a features.json file
+    :param features: List of features
+    """
     print (features)
     with open('features.json', 'w') as features_file:
         for feature in features:
@@ -134,6 +173,10 @@ def print_features(features):
 
 
 def count_pos_and_neg_entries(records):
+    """
+    Counts and prints the number of positive and negative records in the given data
+    :param records List of records that should be evaluated
+    """
     pos = 0
     neg = 0
     for record in records:
@@ -147,10 +190,31 @@ def count_pos_and_neg_entries(records):
 
 
 def create_pos_tags(tokens):
+    """
+    Creates part of speech tags from the given tokens
+    :param tokens: List of tokens
+    :return: List of pos tags
+    """
     return nltk.pos_tag(tokens)
 
 
+def get_training_data_from_file():
+    """
+    Reads the training.txt file with the csv reader
+    :returns: Training data from the file training.txt
+    """
+
+    data_file = open('training.txt')
+    training_data = list(csv.reader(data_file, delimiter='\t'))
+    return training_data
+
+
 def run_tests():
+    """
+    Run tests for four different features selection methods.
+    Prints the results for each test to the console.
+    """
+    training_data = get_training_data_from_file()
     filtered_records = filter_duplicates(training_data)
     count_pos_and_neg_entries(filtered_records)
 
@@ -173,6 +237,7 @@ def run_tests():
 
 
 def main():
+    """Entry point of system"""
     run_tests()
 
 
